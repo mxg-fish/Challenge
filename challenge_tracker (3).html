@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Challenge Tracker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --color-background-primary:#fff;
+  --color-background-secondary:#f5f5f3;
+  --color-background-tertiary:#eeede9;
+  --color-text-primary:#1a1a18;
+  --color-text-secondary:#6b6b67;
+  --color-text-tertiary:#9b9b97;
+  --color-border-tertiary:rgba(0,0,0,0.1);
+  --color-border-secondary:rgba(0,0,0,0.18);
+  --color-border-primary:rgba(0,0,0,0.28);
+  --border-radius-md:8px;
+  --border-radius-lg:12px;
+  --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --gn:#1D9E75;--gn-bg:#E1F5EE;
+  --am:#BA7517;--am-bg:#FAEEDA;
+  --rd:#A32D2D;--rd-bg:#FCEBEB;
+  --bd:#042C53;--bm:#185FA5;
+  --pur:#534AB7;--pur-bg:#EEEDFE;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --color-background-primary:#1c1c1a;
+    --color-background-secondary:#2a2a28;
+    --color-background-tertiary:#111110;
+    --color-text-primary:#f0efeb;
+    --color-text-secondary:#a0a09c;
+    --color-text-tertiary:#6b6b67;
+    --color-border-tertiary:rgba(255,255,255,0.1);
+    --color-border-secondary:rgba(255,255,255,0.18);
+    --color-border-primary:rgba(255,255,255,0.28);
+  }
+}
+body{font-family:var(--font-sans);background:var(--color-background-tertiary);color:var(--color-text-primary);min-height:100vh}
+.app{max-width:1000px;margin:0 auto;padding:12px}
+.topbar{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.topbar h1{font-size:17px;font-weight:500;color:var(--color-text-primary);margin-right:4px}
+.mi{font-size:13px;padding:5px 9px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);-webkit-appearance:none}
+.mi:focus{outline:none;box-shadow:0 0 0 2px #85B7EB}
+select.mi{cursor:pointer}
+.sync-status{font-size:12px;padding:4px 10px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-tertiary);border:0.5px solid var(--color-border-tertiary);white-space:nowrap}
+.sync-status.ok{background:#E1F5EE;color:#085041;border-color:#1D9E75}
+.sync-status.err{background:#FCEBEB;color:#791F1F;border-color:#A32D2D}
+.sync-status.sending{background:#E6F1FB;color:#0C447C;border-color:#185FA5}
+.tabs{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.tab{padding:7px 16px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-secondary);font-size:13px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tab.active{background:var(--bd);border-color:var(--bd);color:#fff}
+.panel{display:none}.panel.active{display:block}
+.seg{display:flex;gap:4px;flex-wrap:wrap}
+.sb{padding:6px 12px;font-size:13px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:background 0.1s,border-color 0.1s,color 0.1s}
+.sb:active{opacity:0.8}
+.sb.active{background:var(--bd);border-color:var(--bd);color:#fff}
+#balls-seg .sb.active{background:#854F0B;border-color:#854F0B;color:#fff}
+#strikes-seg .sb.active{background:#791F1F;border-color:#791F1F;color:#fff}
+#outs-seg .sb.active{background:#185FA5;border-color:#185FA5;color:#fff}
+#inn-seg .sb.active{background:#0F6E56;border-color:#0F6E56;color:#fff}
+#base-seg .sb.active{background:#3C3489;border-color:#3C3489;color:#fff}
+#type-seg .sb.pd.active{background:var(--pur);border-color:var(--pur);color:#fff}
+#type-seg .sb.game.active{background:var(--bd);border-color:var(--bd);color:#fff}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px;margin-bottom:10px}
+.ct{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px}
+.field{display:flex;flex-direction:column;gap:3px;margin-bottom:9px}
+.field label{font-size:12px;color:var(--color-text-secondary)}
+.sit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;align-items:start}
+.two-col{display:grid;grid-template-columns:280px 1fr;gap:10px}
+@media(max-width:660px){.two-col{grid-template-columns:1fr}}
+.chk-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.chk-row input[type=checkbox]{width:20px;height:20px;cursor:pointer;accent-color:var(--bd)}
+.chk-row label{font-size:13px;color:var(--color-text-primary);cursor:pointer}
+.divider{height:0.5px;background:var(--color-border-tertiary);margin:10px 0}
+.btn{padding:11px 20px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-primary);font-size:14px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.btn-p{background:var(--bd);border-color:var(--bd);color:#fff}
+.btn-p:active{background:var(--bm)}
+.submit-row{display:flex;gap:8px;margin-top:12px}
+.stats-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.stat-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px;text-align:center}
+.stat-num{font-size:22px;font-weight:500;color:var(--color-text-primary)}
+.stat-lbl{font-size:11px;color:var(--color-text-secondary);margin-top:1px}
+.pitch-list{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.pitch-row{display:grid;grid-template-columns:26px 54px 44px 54px 56px 54px 54px 1fr 78px;gap:4px;align-items:center;padding:6px 8px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);font-size:12px}
+.hdr-row{background:transparent;font-size:11px;color:var(--color-text-secondary);font-weight:500;border-bottom:0.5px solid var(--color-border-tertiary);border-radius:0;padding-bottom:4px}
+.badge{padding:2px 7px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+.bg{background:var(--gn-bg);color:#085041}.bam{background:var(--am-bg);color:#633806}.br{background:var(--rd-bg);color:#791F1F}
+.bb{background:#E6F1FB;color:#0C447C}.bo{background:#EAF3DE;color:#27500A}
+.bn{background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary)}
+.bpd{background:var(--pur-bg);color:#3C3489}.bgm{background:#E6F1FB;color:#042C53}
+.del-btn{background:none;border:none;color:var(--color-text-tertiary);cursor:pointer;font-size:13px;padding:3px 6px;border-radius:4px;-webkit-tap-highlight-color:transparent}
+.del-btn:active{color:var(--rd)}
+.empty{text-align:center;padding:32px;color:var(--color-text-tertiary);font-size:13px}
+.be-box{padding:9px 12px;border-radius:var(--border-radius-md);font-size:13px;border:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);margin-bottom:10px}
+.be-val{font-size:19px;font-weight:500;margin-right:6px}
+.export-btn{padding:7px 13px;font-size:12px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);cursor:pointer}
+.missed-note{font-size:11px;color:var(--color-text-tertiary);margin-left:26px;margin-top:-4px;margin-bottom:7px}
+.dot-info{font-size:12px;color:var(--color-text-secondary);text-align:center;margin-top:7px;min-height:18px}
+.zone-outer{background:#07192e;border-radius:10px;padding:10px 8px 8px;display:flex;flex-direction:column;align-items:center}
+#zone-svg{display:block;overflow:visible;touch-action:none}
+.report-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px}
+@media(max-width:540px){.report-grid{grid-template-columns:repeat(2,1fr)}}
+.rcard{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px}
+.rcard-title{font-size:11px;color:var(--color-text-secondary);margin-bottom:6px}
+.rcard-val{font-size:24px;font-weight:500;color:var(--color-text-primary)}
+.rcard-sub{font-size:11px;color:var(--color-text-tertiary);margin-top:2px}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.bar-label{font-size:12px;color:var(--color-text-secondary);width:90px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{flex:1;height:8px;background:var(--color-background-tertiary);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px}
+.bar-pct{font-size:12px;color:var(--color-text-secondary);width:38px;text-align:right;flex-shrink:0}
+.heat-cell{width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;border:1px solid rgba(45,106,173,0.2)}
+.heat-grid{display:grid;grid-template-columns:repeat(3,44px)}
+.other-input{margin-top:5px;display:none}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="topbar">
+  <h1>Challenge Tracker</h1>
+  <input class="mi" type="date" id="g-date" style="width:140px"/>
+  <div class="seg" id="type-seg">
+    <button class="sb pd" data-val="PD/Live" onclick="selectSeg(this,'type-seg')">PD / Live AB</button>
+    <button class="sb game active" data-val="Game" onclick="selectSeg(this,'type-seg')">Game / Sim</button>
+  </div>
+  <input class="mi" type="text" id="g-opp" placeholder="Opponent" style="width:110px"/>
+  <div class="sync-status" id="sync-status">Ready</div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('log')">Log Pitch</button>
+  <button class="tab" onclick="switchTab('review')">Pitch Log</button>
+  <button class="tab" onclick="switchTab('report')">Report</button>
+</div>
+
+<!-- LOG TAB -->
+<div id="tab-log" class="panel active">
+  <div class="card">
+    <div class="ct">Situation</div>
+    <div class="sit-grid">
+      <div class="field">
+        <label>Challenger</label>
+        <select class="mi" id="f-name" style="width:100%" onchange="handleNameChange()">
+          <option value="">— Select —</option>
+          <optgroup label="Catchers">
+            <option>Almonte</option><option>Bello</option><option>Bramwell</option><option>Caskenette</option><option>Chirinos</option><option>Forrester</option><option>Hicks</option><option>Ignoffo</option><option>Mack</option><option>Navarreto</option><option>Ortega</option><option>Praytor</option><option>Ramirez</option><option>Rios</option><option>Sanchez</option><option>Tolentino</option><option>Weber</option>
+          </optgroup>
+          <optgroup label="Other">
+            <option value="__other__">Hitter / Other...</option>
+          </optgroup>
+        </select>
+        <div class="other-input" id="other-wrap">
+          <input class="mi" type="text" id="f-other-name" placeholder="Enter name" style="width:100%"/>
+        </div>
+      </div>
+      <div class="field"><label>Pitcher (optional)</label><input class="mi" type="text" id="f-pitcher" placeholder="Name" style="width:100%"/></div>
+      <div class="field"><label>Inning</label><div class="seg" id="inn-seg">
+        <button class="sb" data-val="1" onclick="selectSeg(this,'inn-seg')">1</button><button class="sb" data-val="2" onclick="selectSeg(this,'inn-seg')">2</button><button class="sb" data-val="3" onclick="selectSeg(this,'inn-seg')">3</button><button class="sb" data-val="4" onclick="selectSeg(this,'inn-seg')">4</button><button class="sb" data-val="5" onclick="selectSeg(this,'inn-seg')">5</button><button class="sb" data-val="6" onclick="selectSeg(this,'inn-seg')">6</button><button class="sb" data-val="7" onclick="selectSeg(this,'inn-seg')">7</button><button class="sb" data-val="8" onclick="selectSeg(this,'inn-seg')">8</button><button class="sb" data-val="9" onclick="selectSeg(this,'inn-seg')">9</button><button class="sb" data-val="X" onclick="selectSeg(this,'inn-seg')">X</button>
+      </div></div>
+      <div class="field"><label>Balls</label><div class="seg" id="balls-seg">
+        <button class="sb" data-val="0" onclick="selectSeg(this,'balls-seg');updateBE()">0</button><button class="sb" data-val="1" onclick="selectSeg(this,'balls-seg');updateBE()">1</button><button class="sb" data-val="2" onclick="selectSeg(this,'balls-seg');updateBE()">2</button><button class="sb" data-val="3" onclick="selectSeg(this,'balls-seg');updateBE()">3</button>
+      </div></div>
+      <div class="field"><label>Strikes</label><div class="seg" id="strikes-seg">
+        <button class="sb" data-val="0" onclick="selectSeg(this,'strikes-seg');updateBE()">0</button><button class="sb" data-val="1" onclick="selectSeg(this,'strikes-seg');updateBE()">1</button><button class="sb" data-val="2" onclick="selectSeg(this,'strikes-seg');updateBE()">2</button>
+      </div></div>
+      <div class="field"><label>Outs</label><div class="seg" id="outs-seg">
+        <button class="sb" data-val="0" onclick="selectSeg(this,'outs-seg');updateBE()">0</button><button class="sb" data-val="1" onclick="selectSeg(this,'outs-seg');updateBE()">1</button><button class="sb" data-val="2" onclick="selectSeg(this,'outs-seg');updateBE()">2</button>
+      </div></div>
+      <div class="field"><label>Base State</label><div class="seg" id="base-seg">
+        <button class="sb" data-val="Empty" onclick="selectSeg(this,'base-seg');updateBE()">---</button><button class="sb" data-val="1B only" onclick="selectSeg(this,'base-seg');updateBE()">1--</button><button class="sb" data-val="2B only" onclick="selectSeg(this,'base-seg');updateBE()">-2-</button><button class="sb" data-val="3B only" onclick="selectSeg(this,'base-seg');updateBE()">--3</button><button class="sb" data-val="1B & 2B" onclick="selectSeg(this,'base-seg');updateBE()">12-</button><button class="sb" data-val="1B & 3B" onclick="selectSeg(this,'base-seg');updateBE()">1-3</button><button class="sb" data-val="2B & 3B" onclick="selectSeg(this,'base-seg');updateBE()">-23</button><button class="sb" data-val="Loaded" onclick="selectSeg(this,'base-seg');updateBE()">123</button>
+      </div></div>
+      <div class="field"><label>Leverage State</label><div class="seg" id="lev-seg">
+        <button class="sb" data-val="High" onclick="selectLev(this)">High</button>
+        <button class="sb" data-val="Middle" onclick="selectLev(this)">Middle</button>
+        <button class="sb" data-val="Low" onclick="selectLev(this)">Low</button>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="ct">Pitch Location — Catcher View</div>
+      <div class="zone-outer">
+        <svg id="zone-svg" viewBox="0 0 35 52" width="256" height="381" xmlns="http://www.w3.org/2000/svg" style="cursor:crosshair">
+          <rect width="35" height="52" fill="#07192e"/>
+          <rect x="0.3" y="0.3" width="34.4" height="36.4" rx="0.8" fill="none" stroke="#2d6aad" stroke-width="0.12" stroke-opacity="0.18" stroke-dasharray="1,1.5"/>
+          <ellipse cx="17.5" cy="50.5" rx="10" ry="0.65" fill="#000" fill-opacity="0.4"/>
+          <polygon points="9.4,40.4 26.4,40.4 26.4,42.9 17.5,46.4 9.4,42.9" fill="#000" fill-opacity="0.28"/>
+          <polygon points="9,40 26,40 26,42.5 17.5,46 9,42.5" fill="#cac6c0" stroke="#7a7670" stroke-width="0.22"/>
+          <polygon points="9,40 26,40 26,41.4 17.5,44 9,41.4" fill="#dedad4" fill-opacity="0.5" stroke="none"/>
+          <line x1="17.5" y1="40" x2="17.5" y2="46" stroke="#9a9690" stroke-width="0.12" stroke-opacity="0.65"/>
+          <line x1="9" y1="42.5" x2="17.5" y2="46" stroke="#b0aca6" stroke-width="0.5" stroke-linecap="round"/>
+          <line x1="26" y1="42.5" x2="17.5" y2="46" stroke="#9a9690" stroke-width="0.5" stroke-linecap="round"/>
+          <line x1="9" y1="30" x2="9" y2="40" stroke="#2d6aad" stroke-width="0.1" stroke-opacity="0.3" stroke-dasharray="0.35,0.45"/>
+          <line x1="26" y1="30" x2="26" y2="40" stroke="#2d6aad" stroke-width="0.1" stroke-opacity="0.3" stroke-dasharray="0.35,0.45"/>
+          <rect x="9" y="6" width="17" height="24" rx="0.5" fill="#0d2540" stroke="#2d6aad" stroke-width="0.35"/>
+          <line x1="14.67" y1="6.4" x2="14.67" y2="29.6" stroke="#2d6aad" stroke-width="0.1" stroke-opacity="0.4"/>
+          <line x1="20.33" y1="6.4" x2="20.33" y2="29.6" stroke="#2d6aad" stroke-width="0.1" stroke-opacity="0.4"/>
+          <line x1="9.4" y1="14" x2="25.6" y2="14" stroke="#2d6aad" stroke-width="0.1" stroke-opacity="0.4"/>
+          <line x1="9.4" y1="22" x2="25.6" y2="22" stroke="#2d6aad" stroke-width="0.1" stroke-opacity="0.4"/>
+          <text x="17.5" y="5.1" text-anchor="middle" font-size="1.1" fill="#4a7ab5" opacity="0.9">HIGH</text>
+          <text x="17.5" y="32.5" text-anchor="middle" font-size="1.1" fill="#4a7ab5" opacity="0.9">LOW</text>
+          <text x="7.2" y="18.2" text-anchor="middle" font-size="1.1" fill="#4a7ab5" opacity="0.9">IN</text>
+          <text x="27.8" y="18.2" text-anchor="middle" font-size="1.1" fill="#4a7ab5" opacity="0.9">IN</text>
+          <g id="ball-group" display="none">
+            <circle id="ball-shadow" cx="17.5" cy="18" r="1.6" fill="#000" fill-opacity="0.2" transform="translate(0.18,0.22)"/>
+            <circle id="ball-circle" cx="17.5" cy="18" r="1.45" fill="#f8f5ee" stroke="#c8b090" stroke-width="0.14"/>
+            <path id="seam1" d="" fill="none" stroke="#cc3333" stroke-width="0.19" stroke-linecap="round"/>
+            <path id="seam2" d="" fill="none" stroke="#cc3333" stroke-width="0.19" stroke-linecap="round"/>
+          </g>
+        </svg>
+      </div>
+      <div class="dot-info" id="dot-info">Tap anywhere to place the pitch</div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="ct">Break-Even Threshold</div>
+        <div class="be-box" id="be-box"><span style="color:var(--color-text-tertiary);font-size:13px">Select count, outs &amp; base state above</span></div>
+        <div class="ct">Challenge Decision</div>
+        <div class="chk-row"><input type="checkbox" id="chk-ch" onchange="toggleCF()"/><label for="chk-ch">Pitch was challenged</label></div>
+        <div id="cf" style="display:none">
+          <div class="chk-row" style="margin-left:20px"><input type="checkbox" id="chk-ov"/><label for="chk-ov">Call overturned</label></div>
+        </div>
+        <div class="divider"></div>
+        <div class="chk-row"><input type="checkbox" id="chk-mi"/><label for="chk-mi">Missed challenge opportunity</label></div>
+        <div class="missed-note">Should have challenged but didn't</div>
+        <div class="field" style="margin-top:6px">
+          <label>Notes</label>
+          <input type="text" class="mi" id="pitch-notes" placeholder="Optional..." style="width:100%;padding:6px 9px"/>
+        </div>
+        <div class="submit-row">
+          <button class="btn btn-p" onclick="logPitch()">Log Pitch</button>
+          <button class="btn" onclick="clearForm()">Clear All</button>
+        </div>
+        <div id="form-error" style="color:var(--rd);font-size:12px;margin-top:6px;display:none"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PITCH LOG TAB -->
+<div id="tab-review" class="panel">
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-num" id="s-tot">0</div><div class="stat-lbl">Pitches</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-ch">0</div><div class="stat-lbl">Challenged</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-ov">0</div><div class="stat-lbl">Overturned</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-mi">0</div><div class="stat-lbl">Missed</div></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="ct" style="margin:0">Pitch Log <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:11px;color:var(--color-text-tertiary)">(this device — see Sheet for all)</span></div>
+      <button class="export-btn" onclick="clearAll()" style="color:var(--rd)">Clear Local</button>
+    </div>
+    <div class="pitch-row hdr-row">
+      <span>#</span><span>Context</span><span>Inn/Out</span><span>Count</span><span>Bases</span><span>Leverage</span><span>Break-Even</span><span>Name</span><span>Status</span>
+    </div>
+    <div class="pitch-list" id="pitch-list"><div class="empty">No pitches logged yet.</div></div>
+  </div>
+</div>
+
+<!-- REPORT TAB -->
+<div id="tab-report" class="panel">
+  <div class="card" style="margin-bottom:10px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:13px;font-weight:500;color:var(--color-text-primary)">All devices</div>
+        <div style="font-size:12px;color:var(--color-text-tertiary);margin-top:2px" id="report-source-label">Showing local pitches only — tap to load all devices</div>
+      </div>
+      <button class="btn btn-p" onclick="loadFromSheet()" id="load-sheet-btn" style="padding:9px 16px;font-size:13px;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation">Load All from Sheet</button>
+    </div>
+    <div id="load-error" style="display:none;font-size:12px;color:var(--rd);margin-top:8px"></div>
+  </div>
+  <div id="report-empty" class="card" style="text-align:center;padding:40px;color:var(--color-text-tertiary);font-size:13px">Log some pitches or tap "Load All from Sheet" to see the report.</div>
+  <div id="report-content" style="display:none">
+    <div class="card">
+      <div class="ct">Session Summary <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:11px;color:var(--color-text-tertiary)">(this device only)</span></div>
+      <div class="report-grid">
+        <div class="rcard"><div class="rcard-title">Total tracked</div><div class="rcard-val" id="r-total">0</div></div>
+        <div class="rcard"><div class="rcard-title">Challenges made</div><div class="rcard-val" id="r-ch">0</div><div class="rcard-sub" id="r-ch-pct"></div></div>
+        <div class="rcard"><div class="rcard-title">Calls overturned</div><div class="rcard-val" id="r-ov">0</div><div class="rcard-sub" id="r-ov-pct"></div></div>
+        <div class="rcard"><div class="rcard-title">Missed challenges</div><div class="rcard-val" id="r-mi">0</div></div>
+        <div class="rcard"><div class="rcard-title">Overturn rate</div><div class="rcard-val" id="r-rate">—</div><div class="rcard-sub">of challenges made</div></div>
+        <div class="rcard"><div class="rcard-title">High RE situations</div><div class="rcard-val" id="r-re-count">—</div><div class="rcard-sub" id="r-re-sub"></div></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="card"><div class="ct">By Challenger</div><div id="r-player"></div></div>
+      <div class="card"><div class="ct">By Context</div><div id="r-context"></div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="card"><div class="ct">By Leverage State</div><div id="r-leverage"></div></div>
+      <div class="card"><div class="ct">By Count</div><div id="r-count"></div></div>
+    </div>
+    <div class="card">
+      <div class="ct">Zone Heat Map</div>
+      <div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
+        <div><div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:6px;text-align:center">All challenged</div><div style="display:flex;justify-content:center"><div class="heat-grid" id="heat-all"></div></div></div>
+        <div><div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:6px;text-align:center">Overturned</div><div style="display:flex;justify-content:center"><div class="heat-grid" id="heat-over"></div></div></div>
+        <div><div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:6px;text-align:center">Missed</div><div style="display:flex;justify-content:center"><div class="heat-grid" id="heat-missed"></div></div></div>
+        <div style="font-size:11px;color:var(--color-text-tertiary);padding-top:4px">
+          <div style="margin-bottom:4px">Count per zone cell</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><div style="width:14px;height:14px;background:#0d2540;border:1px solid #2d6aad"></div>0</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><div style="width:14px;height:14px;background:#1a4a7a"></div>1–2</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><div style="width:14px;height:14px;background:#2d6aad"></div>3–4</div>
+          <div style="display:flex;align-items:center;gap:6px"><div style="width:14px;height:14px;background:#4a9ad4"></div>5+</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end .app -->
+
+<script>
+const SHEET_URL='https://script.google.com/macros/s/AKfycbzrqPjl0JKIB9Wcr_HIrRja_yJDpxdo1WmTSpkAbebCnWXLX7N33WypZJyP6u7vRauk/exec';
+const LEV_COLORS={High:'#A32D2D',Middle:'#BA7517',Low:'#1D9E75'};
+const BE={"Empty":[[73,60,50,46],[71,64,51,37],[55,50,40,24],[80,70,60,56],[78,72,61,47],[63,59,49,32],[88,82,76,73],[85,82,75,65],[73,69,62,47]],"1B only":[[63,50,39,35],[61,54,40,28],[44,39,30,17],[70,59,49,45],[65,60,49,37],[48,44,35,22],[78,72,64,60],[71,69,62,51],[56,51,43,31]],"2B only":[[65,60,52,47],[56,54,48,39],[39,34,28,19],[72,68,61,57],[61,60,56,48],[44,40,33,25],[76,79,76,73],[63,64,67,66],[46,42,37,31]],"1B & 2B":[[54,41,32,28],[50,44,32,22],[33,29,22,12],[59,47,37,33],[54,48,37,26],[37,32,25,15],[67,62,55,50],[56,54,50,42],[39,34,29,20]],"3B only":[[66,58,49,45],[57,54,47,36],[40,36,29,19],[64,67,63,59],[49,50,52,50],[32,28,24,19],[74,77,74,70],[61,62,64,63],[44,39,34,28]],"1B & 3B":[[58,50,41,37],[49,46,39,29],[32,28,23,15],[58,56,50,45],[45,45,43,37],[29,25,21,15],[66,65,60,55],[53,53,52,46],[36,32,27,20]],"2B & 3B":[[61,58,51,46],[50,48,45,38],[33,29,24,17],[59,66,66,61],[42,43,50,53],[26,23,19,17],[65,70,69,65],[49,50,55,56],[32,28,24,20]],"Loaded":[[48,37,29,25],[43,38,28,19],[27,24,18,10],[47,37,29,25],[41,36,28,19],[26,22,17,10],[48,37,29,25],[42,37,28,19],[27,23,18,10]]};
+
+function getBE(base,s,b,o){const t=BE[base];if(!t)return null;const si=parseInt(s),bi=parseInt(b),oi=parseInt(o);if(isNaN(si)||isNaN(bi)||isNaN(oi))return null;return t[si*3+oi]?.[bi]??null;}
+
+let pitches=[],pitchNX=null,pitchNY=null,pitchCount=0;
+const SZ_X=9,SZ_Y=6,SZ_W=17,SZ_H=24;
+
+// init
+(function(){
+  const d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');
+  document.getElementById('g-date').value=y+'-'+m+'-'+day;
+  setLevDefault();
+  // wire SVG tap/click
+  const svg=document.getElementById('zone-svg');
+  svg.addEventListener('click',svgClick);
+  svg.addEventListener('touchend',function(e){e.preventDefault();const t=e.changedTouches[0];svgClick({clientX:t.clientX,clientY:t.clientY});},{passive:false});
+})();
+
+function setSyncStatus(state,msg){
+  const el=document.getElementById('sync-status');
+  el.className='sync-status '+state;el.textContent=msg;
+}
+
+async function sendToSheet(pitch){
+  setSyncStatus('sending','Syncing...');
+  try{
+    const r=await fetch(SHEET_URL,{method:'POST',body:JSON.stringify(pitch)});
+    const d=await r.json();
+    if(d.status==='ok'){setSyncStatus('ok','Synced');setTimeout(()=>setSyncStatus('','Ready'),3000);}
+    else setSyncStatus('err','Sync failed');
+  }catch(e){setSyncStatus('err','No connection');}
+}
+
+function svgClick(evt){
+  const svg=document.getElementById('zone-svg');
+  const pt=svg.createSVGPoint();
+  pt.x=evt.clientX;pt.y=evt.clientY;
+  const sp=pt.matrixTransform(svg.getScreenCTM().inverse());
+  const vx=sp.x,vy=sp.y;
+  if(vy>38)return;
+  document.getElementById('ball-circle').setAttribute('cx',vx);
+  document.getElementById('ball-circle').setAttribute('cy',vy);
+  document.getElementById('ball-shadow').setAttribute('cx',vx+0.18);
+  document.getElementById('ball-shadow').setAttribute('cy',vy+0.22);
+  const r=1.45;
+  document.getElementById('seam1').setAttribute('d',`M ${vx-r*.7} ${vy-r*.2} Q ${vx-r*.1} ${vy+r*.5} ${vx+r*.4} ${vy+r*.7}`);
+  document.getElementById('seam2').setAttribute('d',`M ${vx-r*.4} ${vy-r*.7} Q ${vx+r*.1} ${vy-r*.5} ${vx+r*.7} ${vy+r*.2}`);
+  document.getElementById('ball-group').setAttribute('display','inline');
+  pitchNX=parseFloat(((vx-SZ_X)/SZ_W).toFixed(3));
+  pitchNY=parseFloat(((vy-SZ_Y)/SZ_H).toFixed(3));
+  document.getElementById('dot-info').textContent='Location: '+zoneLabel(pitchNX,pitchNY);
+  document.getElementById('form-error').style.display='none';
+}
+
+function zoneLabel(nx,ny){
+  if(nx<0||nx>1||ny<0||ny>1){let s='Chase';if(ny<-0.2)s+=' High';else if(ny>1.2)s+=' Low';if(nx<-0.2)s+=' Inner';else if(nx>1.2)s+=' Outer';return s;}
+  return (ny<0.333?'Up':ny<0.667?'Mid':'Low')+'-'+(nx<0.333?'In':nx<0.667?'Middle':'Out');
+}
+function getZoneCell(nx,ny){
+  if(nx<0||nx>1||ny<0||ny>1)return null;
+  return (ny<0.333?0:ny<0.667?1:2)*3+(nx<0.333?0:nx<0.667?1:2);
+}
+async function loadFromSheet(){
+  const btn=document.getElementById('load-sheet-btn');
+  const errEl=document.getElementById('load-error');
+  const lbl=document.getElementById('report-source-label');
+  btn.textContent='Loading...';btn.disabled=true;errEl.style.display='none';
+  try{
+    const resp=await fetch(SHEET_URL+'?t='+Date.now());
+    const data=await resp.json();
+    if(data.status==='ok'&&data.pitches){
+      lbl.textContent='Showing all '+data.pitches.length+' pitches from sheet (all devices)';
+      btn.textContent='Refresh from Sheet';btn.disabled=false;
+      renderReport(data.pitches);
+    } else {
+      throw new Error(data.message||'Unknown error');
+    }
+  }catch(e){
+    errEl.textContent='Could not load from sheet: '+e.message;
+    errEl.style.display='block';
+    btn.textContent='Load All from Sheet';btn.disabled=false;
+  }
+}
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelector(`.tab[onclick="switchTab('${t}')"]`).classList.add('active');
+  document.getElementById('tab-'+t).classList.add('active');
+  if(t==='review')renderReview();
+  if(t==='report'){
+    document.getElementById('report-source-label').textContent='Showing local pitches only — tap to load all devices';
+    renderReport(pitches);
+  }
+}
+}
+function selectSeg(el,g){document.querySelectorAll('#'+g+' .sb').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+function selectLev(el){
+  document.querySelectorAll('#lev-seg .sb').forEach(b=>{b.classList.remove('active');b.style.background='';b.style.borderColor='';b.style.color='';});
+  el.classList.add('active');const c=LEV_COLORS[el.dataset.val]||'#042C53';
+  el.style.background=c;el.style.borderColor=c;el.style.color='#fff';
+}
+function setLevDefault(){
+  document.querySelectorAll('#lev-seg .sb').forEach(b=>{b.classList.remove('active');b.style.background='';b.style.borderColor='';b.style.color='';});
+  const btn=document.querySelector('#lev-seg .sb[data-val="Low"]');
+  btn.classList.add('active');btn.style.background=LEV_COLORS.Low;btn.style.borderColor=LEV_COLORS.Low;btn.style.color='#fff';
+}
+function getVal(g){const a=document.querySelector('#'+g+' .sb.active');return a?a.dataset.val:null;}
+function handleNameChange(){
+  const sel=document.getElementById('f-name'),isOther=sel.value==='__other__';
+  document.getElementById('other-wrap').style.display=isOther?'block':'none';
+  if(isOther)document.getElementById('f-other-name').focus();
+  document.getElementById('form-error').style.display='none';
+}
+function getChallenger(){const sel=document.getElementById('f-name');return sel.value==='__other__'?document.getElementById('f-other-name').value.trim():sel.value;}
+function isHitter(){return document.getElementById('f-name').value==='__other__';}
+function toggleCF(){const on=document.getElementById('chk-ch').checked;document.getElementById('cf').style.display=on?'block':'none';if(!on)document.getElementById('chk-ov').checked=false;}
+function updateBE(){
+  const s=getVal('strikes-seg'),b=getVal('balls-seg'),o=getVal('outs-seg'),bs=getVal('base-seg');
+  const box=document.getElementById('be-box');
+  if(!s||b===null||!o||!bs){box.innerHTML='<span style="color:var(--color-text-tertiary);font-size:13px">Select count, outs &amp; base state above</span>';return;}
+  const be=getBE(bs,s,b,o);if(be===null)return;
+  const col=be<=30?'#0F6E56':be<=50?'#854F0B':'#791F1F';
+  const tip=be<=30?'Low threshold — likely worth it':be<=50?'Moderate — use leverage state':'High threshold — need a strong read';
+  box.innerHTML=`<span style="font-size:19px;font-weight:500;color:${col};margin-right:6px">${be}%</span><span style="font-size:13px;color:var(--color-text-secondary)">${tip}</span><div style="font-size:11px;color:var(--color-text-tertiary);margin-top:3px">${s}K · ${b}B · ${o} out · ${bs}</div>`;
+}
+function resetPitchFields(){
+  pitchNX=null;pitchNY=null;
+  document.getElementById('ball-group').setAttribute('display','none');
+  document.getElementById('dot-info').textContent='Tap anywhere to place the pitch';
+  document.getElementById('chk-ch').checked=false;document.getElementById('chk-ov').checked=false;document.getElementById('chk-mi').checked=false;
+  document.getElementById('pitch-notes').value='';document.getElementById('cf').style.display='none';document.getElementById('form-error').style.display='none';
+}
+function clearForm(){
+  resetPitchFields();
+  document.getElementById('f-name').value='';document.getElementById('other-wrap').style.display='none';document.getElementById('f-other-name').value='';document.getElementById('f-pitcher').value='';
+  ['inn-seg','balls-seg','strikes-seg','outs-seg','base-seg'].forEach(g=>document.querySelectorAll('#'+g+' .sb').forEach(b=>b.classList.remove('active')));
+  setLevDefault();
+  document.getElementById('be-box').innerHTML='<span style="color:var(--color-text-tertiary);font-size:13px">Select count, outs &amp; base state above</span>';
+}
+function logPitch(){
+  const err=document.getElementById('form-error');
+  if(pitchNX===null){err.textContent='Tap the zone to place the pitch.';err.style.display='block';return;}
+  const name=getChallenger();
+  if(!name){err.textContent=document.getElementById('f-name').value==='__other__'?'Enter the hitter\'s name.':'Select a challenger.';err.style.display='block';return;}
+  const hitter=isHitter(),type=getVal('type-seg')||'Game',role=hitter?'Hitter':'Catcher';
+  const pitcher=document.getElementById('f-pitcher').value.trim();
+  const inn=getVal('inn-seg'),b=getVal('balls-seg'),s=getVal('strikes-seg'),o=getVal('outs-seg'),bs=getVal('base-seg'),lev=getVal('lev-seg')||'Low';
+  const challenged=document.getElementById('chk-ch').checked,overturned=challenged&&document.getElementById('chk-ov').checked,missed=document.getElementById('chk-mi').checked;
+  const notes=document.getElementById('pitch-notes').value.trim();
+  const be=(s&&b!==null&&o&&bs)?getBE(bs,s,b,o):null;
+  pitchCount++;
+  const pitch={num:pitchCount,type,name,role,pitcher,inn:inn||'—',balls:b||'—',strikes:s||'—',outs:o||'—',base:bs||'—',count:(b!==null&&s)?b+'B-'+s+'K':'—',lev,zone:zoneLabel(pitchNX,pitchNY),nx:pitchNX,ny:pitchNY,challenged,overturned,missed,notes,be,date:document.getElementById('g-date').value||'',opp:document.getElementById('g-opp').value||''};
+  pitches.push({...pitch,id:Date.now()});
+  sendToSheet(pitch);
+  err.style.display='none';
+  resetPitchFields();
+  const toast=document.createElement('div');
+  toast.style.cssText='position:fixed;bottom:20px;right:20px;background:#042C53;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.2)';
+  toast.textContent='Pitch #'+pitchCount+' — '+name+(hitter?' (H)':'');
+  document.body.appendChild(toast);setTimeout(()=>toast.remove(),2000);
+}
+function renderReview(){
+  const tot=pitches.length,ch=pitches.filter(p=>p.challenged).length,ov=pitches.filter(p=>p.overturned).length,mi=pitches.filter(p=>p.missed).length;
+  document.getElementById('s-tot').textContent=tot;document.getElementById('s-ch').textContent=ch;
+  document.getElementById('s-ov').textContent=ov+(ch>0?' ('+(Math.round(ov/ch*100))+'%)':'');document.getElementById('s-mi').textContent=mi;
+  const list=document.getElementById('pitch-list');
+  if(!pitches.length){list.innerHTML='<div class="empty">No pitches logged yet.</div>';return;}
+  list.innerHTML='';
+  [...pitches].reverse().forEach((p,i)=>{
+    const num=pitches.length-i,row=document.createElement('div');row.className='pitch-row';
+    let status='';
+    if(p.missed)status='<span class="badge bb">Missed</span>';
+    else if(p.challenged&&p.overturned)status='<span class="badge bo">Overturned</span>';
+    else if(p.challenged)status='<span class="badge bn">Challenged</span>';
+    else status='<span style="color:var(--color-text-tertiary);font-size:11px">—</span>';
+    const lb=p.lev==='High'?'br':p.lev==='Middle'?'bam':'bg',tb=p.type==='PD/Live'?'bpd':'bgm';
+    const beStr=p.be!==null?p.be+'%':'—';
+    let bc='var(--color-text-secondary)';if(p.be!==null)bc=p.be<=30?'#0F6E56':p.be<=50?'#854F0B':'#791F1F';
+    const nd=p.role==='Hitter'?`${p.name} <span style="font-size:10px;color:var(--color-text-tertiary)">(H)</span>`:p.name;
+    row.innerHTML=`<span style="color:var(--color-text-tertiary)">${num}</span><span><span class="badge ${tb}" style="font-size:10px">${p.type}</span></span><span>${p.inn}/${p.outs}</span><span>${p.count}</span><span style="font-size:11px">${p.base}</span><span><span class="badge ${lb}">${p.lev}</span></span><span style="font-weight:500;color:${bc}">${beStr}</span><span style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${nd}</span><span style="display:flex;align-items:center;gap:3px">${status}<button class="del-btn" onclick="deletePitch(${p.id})">✕</button></span>`;
+    list.appendChild(row);
+  });
+}
+function barRow(label,val,max,color){const pct=max>0?Math.round(val/max*100):0;return `<div class="bar-row"><div class="bar-label" title="${label}">${label}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div><div class="bar-pct">${val}</div></div>`;}
+function heatColor(n){return n===0?'#0d2540':n<=2?'#1a4a7a':n<=4?'#2d6aad':'#4a9ad4';}
+function buildHeatmap(tp,cid){
+  const counts=new Array(9).fill(0);tp.forEach(p=>{const c=getZoneCell(p.nx,p.ny);if(c!==null)counts[c]++;});
+  const el=document.getElementById(cid);el.innerHTML='';
+  ['UL','UM','UR','ML','MM','MR','LL','LM','LR'].forEach((lbl,i)=>{
+    const cell=document.createElement('div');cell.className='heat-cell';
+    cell.style.background=heatColor(counts[i]);cell.style.color=counts[i]===0?'rgba(74,122,181,0.3)':'#fff';
+    cell.textContent=counts[i]>0?counts[i]:'·';cell.title=lbl+': '+counts[i];el.appendChild(cell);
+  });
+}
+function renderReport(dataset){
+  dataset=dataset||pitches;
+  const tot=dataset.length;
+  if(tot===0){document.getElementById('report-empty').style.display='block';document.getElementById('report-content').style.display='none';return;}
+  document.getElementById('report-empty').style.display='none';document.getElementById('report-content').style.display='block';
+  const ch=dataset.filter(p=>p.challenged).length,ov=dataset.filter(p=>p.overturned).length,mi=dataset.filter(p=>p.missed).length,rate=ch>0?Math.round(ov/ch*100):0;
+  const highRE=dataset.filter(p=>{
+    const b=String(p.balls||''),s=String(p.strikes||''),o=String(p.outs||''),bs=String(p.base||'');
+    if(!b||b==='—'||!s||s==='—'||!o||o==='—'||!bs||bs==='—')return false;
+    const runners=bs==='Empty'?0:(bs.replace(/[^123]/g,'')||'').length;
+    return (parseInt(b)===3||parseInt(s)===2)&&runners>=2;
+  });
+  document.getElementById('r-total').textContent=tot;
+  document.getElementById('r-ch').textContent=ch;
+  document.getElementById('r-ch-pct').textContent=tot>0?Math.round(ch/tot*100)+'% of pitches':'';
+  document.getElementById('r-ov').textContent=ov;
+  document.getElementById('r-ov-pct').textContent=ch>0?rate+'% overturn rate':'';
+  document.getElementById('r-mi').textContent=mi;
+  document.getElementById('r-rate').textContent=ch>0?rate+'%':'—';
+  const reChAll=highRE.filter(p=>p.challenged).length,reOvAll=highRE.filter(p=>p.overturned).length;
+  document.getElementById('r-re-count').textContent=highRE.length;
+  document.getElementById('r-re-sub').textContent=highRE.length>0?reChAll+' challenged · '+reOvAll+' OT':'';
+  const players={};
+  dataset.forEach(p=>{
+    const key=String(p.name||'Unknown')+(p.role==='Hitter'?' (H)':'');
+    if(!players[key])players[key]={total:0,ch:0,ov:0,mi:0,role:p.role};
+    players[key].total++;if(p.challenged)players[key].ch++;if(p.overturned)players[key].ov++;if(p.missed)players[key].mi++;
+  });
+  const maxT=Math.max(...Object.values(players).map(d=>d.total),1);
+  let ph='';
+  Object.entries(players).sort((a,b)=>{if(a[1].role!==b[1].role)return a[1].role==='Hitter'?1:-1;return b[1].total-a[1].total;}).forEach(([name,d])=>{
+    const ovR=d.ch>0?Math.round(d.ov/d.ch*100)+'%':'—';
+    ph+=`<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:13px;font-weight:500;color:var(--color-text-primary)">${name}</span><span style="font-size:11px;color:var(--color-text-tertiary)">${d.ch} ch · ${ovR} OT · ${d.mi} missed</span></div>${barRow('Tracked',d.total,maxT,'#185FA5')}${barRow('Challenged',d.ch,Math.max(d.total,1),'#1D9E75')}${d.mi>0?barRow('Missed',d.mi,Math.max(d.total,1),'#BA7517'):''}</div>`;
+  });
+  document.getElementById('r-player').innerHTML=ph||'<span style="color:var(--color-text-tertiary);font-size:13px">No data</span>';
+  let ch2='';
+  ['Game','PD/Live'].forEach(t=>{
+    const sub=dataset.filter(p=>p.type===t);if(!sub.length)return;
+    const sc=sub.filter(p=>p.challenged).length,so=sub.filter(p=>p.overturned).length;
+    ch2+=`<div style="margin-bottom:10px"><div style="font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px">${t} <span style="font-weight:400;color:var(--color-text-tertiary)">(${sub.length})</span></div>${barRow('Challenged',sc,sub.length,'#185FA5')}${barRow('Overturned',so,Math.max(sc,1),'#1D9E75')}</div>`;
+  });
+  document.getElementById('r-context').innerHTML=ch2||'<span style="color:var(--color-text-tertiary);font-size:13px">No data</span>';
+  let lh='';
+  [['High','#A32D2D'],['Middle','#BA7517'],['Low','#1D9E75']].forEach(([l,c])=>{
+    const sub=dataset.filter(p=>p.lev===l);if(!sub.length)return;
+    const sc=sub.filter(p=>p.challenged).length,so=sub.filter(p=>p.overturned).length;
+    lh+=`<div style="margin-bottom:10px"><div style="font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px">${l} <span style="font-weight:400;color:var(--color-text-tertiary)">(${sub.length})</span></div>${barRow('Challenged',sc,sub.length,c)}${barRow('Overturned',so,Math.max(sc,1),c)}</div>`;
+  });
+  document.getElementById('r-leverage').innerHTML=lh||'<span style="color:var(--color-text-tertiary);font-size:13px">No data</span>';
+  const cts={};
+  dataset.forEach(p=>{
+    const cnt=String(p.count||'');if(!cnt||cnt==='—')return;
+    if(!cts[cnt])cts[cnt]={total:0,ch:0,ov:0};
+    cts[cnt].total++;if(p.challenged)cts[cnt].ch++;if(p.overturned)cts[cnt].ov++;
+  });
+  let coh='<div style="font-size:12px">'; let hc=false;
+  ['0B-0K','1B-0K','2B-0K','3B-0K','0B-1K','1B-1K','2B-1K','3B-1K','0B-2K','1B-2K','2B-2K','3B-2K'].forEach(c=>{
+    const d=cts[c];if(!d)return;hc=true;
+    const ovR=d.ch>0?Math.round(d.ov/d.ch*100)+'%':'—';
+    coh+=`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:0.5px solid var(--color-border-tertiary)"><span style="color:var(--color-text-primary)">${c}</span><span style="color:var(--color-text-secondary)">${d.total} · ${d.ch} ch · <span style="color:#0F6E56">${ovR} OT</span></span></div>`;
+  });
+  coh+='</div>';
+  document.getElementById('r-count').innerHTML=hc?coh:'<span style="color:var(--color-text-tertiary);font-size:13px">No count data</span>';
+  buildHeatmap(dataset.filter(p=>p.challenged),'heat-all');
+  buildHeatmap(dataset.filter(p=>p.overturned),'heat-over');
+  buildHeatmap(dataset.filter(p=>p.missed),'heat-missed');
+}
+function deletePitch(id){pitches=pitches.filter(p=>p.id!==id);renderReview();}
+function clearAll(){if(confirm('Clear local pitch log? (Sheet data is unaffected)')){pitches=[];pitchCount=0;renderReview();renderReport(pitches);}}
+</script>
+</body>
+</html>
